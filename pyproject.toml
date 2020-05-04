@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "spotifycharts"
+version = "2020.05.01"
+description = "The easy-to-use package for downloading Spotify charts with Python."
+authors = ["Arthur Meltonyan <arthur.meltonyan@gmail.com>"]
+maintainers = ["Arthur Meltonyan <arthur.meltonyan@gmail.com>"]
+readme = "README.rst"
+homepage = 'https://github.com/arthurmeltonyan/spotifycharts'
+repository = 'https://github.com/arthurmeltonyan/spotifycharts'
+keywords = ['download', 'spotify', 'charts', 'music']
+
+[tool.poetry.dependencies]
+python = "^3.7"
+pendulum = "^2.1.0"
+pandas = "^1.0.3"
+requests = "^2.23.0"
+lxml = "^4.5.0"
+tqdm = "^4.46.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"

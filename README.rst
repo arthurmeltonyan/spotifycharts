@@ -47,7 +47,7 @@ Usage
 .. code:: python
 
     import spotifycharts as sc
-    regions = sc.get_all_regions(name='top100',
+    regions = sc.get_all_regions(name='top200',
                                  periodicity='weekly')
 
 ``get_all_dates`` lists all available dates of ``name`` charts in ``region_name`` on a ``periodicity`` basis:
@@ -55,6 +55,6 @@ Usage
 .. code:: python
 
     import spotifycharts as sc
-    dates = sc.get_all_dates(name='top100',
+    dates = sc.get_all_dates(name='top200',
                              periodicity='daily',
                              region_name='france')

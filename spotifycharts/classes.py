@@ -1,311 +1,277 @@
 import io
 import os
-import multiprocessing as mp
 
 
 import pendulum
-import requests
+from pendulum.date import Date
+import httpx
 from lxml import etree as et
+from pathos import multiprocessing as mp
 
 
 from spotifycharts import constants
 
 
 
-class DownloadError(ConnectionError):
+class _Name(str):
 
-    def __str__(self):
-
-        return constants.DOWNLOAD_MESSAGE
-
-
-class NameError(TypeError):
-
-    def __str__(self):
-
-        return constants.NAME_MESSAGE
-
-class Name():
-
-    def __init__(self,
-                 name):
+    def __new__(cls,
+                name):
 
         try:
             name = name.lower().strip()
-            if name not in ['viral', 'regional']:
-                raise NameError
-            self._name = name
+            if name not in constants._NAME_VALUES:
+                raise TypeError
         except:
-            raise NameError
+            message = constants._NAME_MESSAGE
+            message = message.format(name=name)
+            raise TypeError(message)
+        else:
+            return str.__new__(cls,
+                               name)
 
-    @property
-    def name(self):
 
-        return self._name
+class _Periodicity(str):
 
-
-class PeriodicityError(TypeError):
-
-    def __str__(self):
-
-        return constants.PERIODICITY_MESSAGE
-
-class Periodicity():
-
-    def __init__(self,
-                 periodicity):
+    def __new__(cls,
+                periodicity):
 
         try:
             periodicity = periodicity.lower().strip()
-            if periodicity not in ['daily', 'weekly']:
-                raise PeriodicityError
-            self._periodicity = periodicity
+            if periodicity not in constants._PERIODICITY_VALUES:
+                raise TypeError
         except:
-            raise PeriodicityError
+            message = constants._PERIODICITY_MESSAGE
+            message = message.format(periodicity=periodicity)
+            raise TypeError(message)
+        else:
+            return str.__new__(cls,
+                               periodicity)
 
-    @property
-    def periodicity(self):
 
-        return self._periodicity
+class _RegionName(str):
 
+    def __new__(cls,
+                name,
+                region_name):
 
-class RegionNameError(TypeError):
+        name = _Name(name)
 
-    def __str__(self):
+        name_code = constants._NAME_VALUES[name]
 
-        return constants.REGION_NAME_MESSAGE
-
-class RegionName():
-
-    def __init__(self,
-                 name,
-                 region_name):
-
-        self._name = Name(name).name
-
-        main_url = '/'.join([constants._CHART_URL,
-                             name])
-        with requests.Session() as session:
-            response = session.get(main_url)
+        main_url = constants._MAIN_URL.format(name_code=name_code)
+        response = httpx.get(main_url,
+                             timeout=constants._TIMEOUT)
         if not 200 <= response.status_code < 300:
-            raise DownloadError
-        parser = et.HTMLParser()
-        tree = et.parse(io.BytesIO(response.content),
-                        parser)
+            message = constants._REGION_DOWNLOAD_MESSAGE
+            message = message.format(url=main_url)
+            raise ConnectionError(message)
+        tree = et.parse(io.StringIO(response.text),
+                        et.HTMLParser())
         region_elements = tree.xpath(constants._REGIONS_XPATH)
-        all_region_names = [element.text.lower().strip()
-                            for element in region_elements]
+        all_region_names = [region_element.text.lower().strip()
+                            for region_element in region_elements]
+        if not region_name:
+            return str.__new__(cls,
+                               constants._DEFAULT_REGION_NAME)
         try:
             region_name = region_name.lower().strip()
             if region_name not in all_region_names:
-                raise RegionNameError
-            self._region_name = region_name
+                raise TypeError
         except:
-            raise RegionNameError
-
-    @property
-    def region_name(self):
-
-        return self._region_name
-
-
-class RegionNamesError(TypeError):
-
-    def __str__(self):
-
-        return constants.REGION_NAMES_MESSAGE
-
-class RegionNames():
-
-    def __init__(self,
-                 name,
-                 region_names=None):
-
-        self._name = Name(name).name
-
-        main_url = '/'.join([constants._CHART_URL,
-                             self._name])
-        with requests.Session() as session:
-            response = session.get(main_url)
-        if not 200 <= response.status_code < 300:
-            raise DownloadError
-        parser = et.HTMLParser()
-        tree = et.parse(io.BytesIO(response.content),
-                        parser)
-        region_elements = tree.xpath(constants._REGIONS_XPATH)
-        all_region_names = [element.text.lower().strip()
-                            for element in region_elements]
-        if not region_names:
-            self._region_names = all_region_names
+            message = constants._REGION_NAME_MESSAGE
+            message = message.format(region_name=region_name)
+            raise TypeError(message)
         else:
-            try:
-                region_names = set([region_name.lower().strip()
-                                    for region_name in region_names])
-                if not region_names.issubset(all_region_names):
-                    raise RegionNamesError
-                self._region_names = region_names
-            except:
-                raise RegionNamesError
-
-    @property
-    def region_names(self):
-
-        return self._region_names
+            return str.__new__(cls,
+                               region_name)
 
 
-class BeginDateError(TypeError):
+class _RegionNames(str):
 
-    def __str__(self):
+    def __new__(cls,
+                name,
+                region_names):
 
-        return constants.BEGIN_DATE_MESSAGE
+        name = _Name(name)
 
-class BeginDate():
+        name_code = constants._NAME_VALUES[name]
 
-    def __init__(self,
-                 begin_date=None):
+        main_url = constants._MAIN_URL.format(name_code=name_code)
+        response = httpx.get(main_url,
+                             timeout=constants._TIMEOUT)
+        if not 200 <= response.status_code < 300:
+            message = constants._REGION_DOWNLOAD_MESSAGE
+            message = message.format(url=main_url)
+            raise ConnectionError(message)
+        tree = et.parse(io.StringIO(response.text),
+                        et.HTMLParser())
+        region_elements = tree.xpath(constants._REGIONS_XPATH)
+        all_region_names = [region_element.text.lower().strip()
+                            for region_element in region_elements]
+        if not region_names:
+            return [str.__new__(cls,
+                                constants._DEFAULT_REGION_NAME)]
+        try:
+            region_names = set([region_name.lower().strip()
+                                for region_name in region_names])
+            if not region_names.issubset(all_region_names):
+                raise TypeError
+        except:
+            region_names = ', '.join(region_names)
+            message = constants._REGION_NAMES_MESSAGE
+            message = message.format(region_names=region_names)
+            raise TypeError(message)
+        else:
+            return [str.__new__(cls,
+                                region_name)
+                    for region_name in region_names]
 
-        min_date = pendulum.date(2008, 10, 7)
+
+class _DateRange(Date):
+
+    def __new__(cls,
+                begin_date,
+                end_date):
+
+        min_date = pendulum.from_format(constants._FOUNDATION_DATE,
+                                        constants._FILE_DATE_FORMAT).date()
         max_date = pendulum.today().date()
 
         if not begin_date:
-            self._begin_date = max_date.subtract(days=30)
+            months = constants._DEFAULT_MONTH_PERIOD
+            begin_date = Date.__new__(cls,
+                                      max_date.subtract(months=months).year,
+                                      max_date.subtract(months=months).month,
+                                      max_date.subtract(months=months).day)
         else:
             try:
                 begin_date = pendulum.from_format(begin_date.strip(),
-                                                  'DD-MM-YYYY').date()
+                                                  constants._FILE_DATE_FORMAT)
+                begin_date = begin_date.date()
                 if max_date < begin_date:
-                    raise BeginDateError
+                    raise TypeError
                 elif begin_date < min_date:
-                    begin_date = min_date
-                self._begin_date = begin_date
+                    begin_date = Date.__new__(cls,
+                                            min_date.year,
+                                            min_date.month,
+                                            min_date.day)
             except:
-                raise BeginDateError
-
-    @property
-    def begin_date(self):
-
-        return self._begin_date
-
-
-class EndDateError(TypeError):
-
-    def __str__(self):
-
-        return constants.END_DATE_MESSAGE
-
-class EndDate():
-
-    def __init__(self,
-                 end_date=None):
-
-        min_date = pendulum.date(2008, 10, 7)
-        max_date = pendulum.today().date()
+                begin_date = begin_date.format(constants._FILE_DATE_FORMAT)
+                message = constants._BEGIN_DATE_MESSAGE
+                message = message.format(begin_date=begin_date)
+                raise TypeError(message)
+            else:
+                begin_date = Date.__new__(cls,
+                                        begin_date.year,
+                                        begin_date.month,
+                                        begin_date.day)
 
         if not end_date:
-            self._end_date = max_date
+            end_date = Date.__new__(cls,
+                                    max_date.year,
+                                    max_date.month,
+                                    max_date.day)
         else:
             try:
                 end_date = pendulum.from_format(end_date.strip(),
-                                                'DD-MM-YYYY').date()
+                                                constants._FILE_DATE_FORMAT)
+                end_date = end_date.date()
                 if min_date > end_date:
-                    raise EndDateError
+                    raise TypeError
                 elif end_date > max_date:
-                    end_date = max_date
-                self._end_date = end_date
+                    end_date = Date.__new__(cls,
+                                            max_date.year,
+                                            max_date.month,
+                                            max_date.day)
             except:
-                raise EndDateError
+                end_date = end_date.format(constants._FILE_DATE_FORMAT)
+                message = constants._END_DATE_MESSAGE
+                message = message.format(end_date=end_date)
+                raise TypeError(message)
+            else:
+                end_date = Date.__new__(cls,
+                                        end_date.year,
+                                        end_date.month,
+                                        end_date.day)
 
-    @property
-    def end_date(self):
+        if begin_date > end_date:
+            message = constants._WRONG_DATE_RANGE_MESSAGE
+            message = message.format(begin_date=begin_date,
+                                     end_date=end_date)
+            raise TypeError(message)
 
-        return self._end_date
-
-
-class WrongDateRangeError(TypeError):
-
-    def __str__(self):
-
-        return constants.WRONG_DATE_RANGE_MESSAGE
+        return begin_date, end_date
 
 
-class CpuCountError(TypeError):
+class _CpuCount(int):
 
-    def __str__(self):
-
-        return constants.CPU_COUNT_MESSAGE
-
-class CpuCount():
-
-    def __init__(self,
-                 cpu_count=None):
+    def __new__(cls,
+                cpu_count):
 
         min_cpu_count = 1
         max_cpu_count = mp.cpu_count()
 
         if not cpu_count:
-            self._cpu_count = max_cpu_count
+            return int.__new__(cls,
+                               max_cpu_count)
+        try:
+            if not isinstance(cpu_count, int):
+                raise TypeError
+            elif min_cpu_count > cpu_count:
+                return int.__new__(cls,
+                                   min_cpu_count)
+            elif cpu_count > max_cpu_count:
+                return int.__new__(cls,
+                                   max_cpu_count)
+        except:
+            cpu_count = str(cpu_count)
+            message = constants._CPU_COUNT_MESSAGE
+            message = message.format(cpu_count=cpu_count)
+            raise TypeError(message)
         else:
-            try:
-                if not isinstance(cpu_count, int):
-                    raise CpuCountError
-                elif min_cpu_count > cpu_count:
-                    cpu_count = min_cpu_count
-                elif cpu_count > max_cpu_count:
-                    cpu_count = max_cpu_count
-                self._cpu_count = cpu_count
-            except:
-                raise CpuCountError
-
-    @property
-    def cpu_count(self):
-
-        return self._cpu_count
+            return int.__new__(cls,
+                               cpu_count)
 
 
-class FilePathError(TypeError):
+class _FilePath(str):
 
-    def __str__(self):
+    def __new__(cls,
+                name,
+                periodicity,
+                begin_date,
+                end_date,
+                file_path):
 
-        return constants.FILE_PATH_MESSAGE
-
-class FilePath():
-
-    def __init__(self,
-                 name,
-                 periodicity,
-                 begin_date=None,
-                 end_date=None,
-                 file_path=None):
-
-        self._name = Name(name).name
-        self._periodicity = Periodicity(periodicity).periodicity
-        self._begin_date = BeginDate(begin_date).begin_date
-        self._end_date = EndDate(end_date).end_date
+        name = _Name(name)
+        periodicity = _Periodicity(periodicity)
+        begin_date, end_date = _DateRange(begin_date,
+                                          end_date)
+        begin_date = begin_date.format(constants._FILE_DATE_FORMAT)
+        end_date = end_date.format(constants._FILE_DATE_FORMAT)
 
         if not file_path:
             directory_path = os.getcwd()
-            file_name = '_'.join(['spotify',
-                                  self._name,
-                                  self._periodicity,
-                                  'track',
-                                  'charts',
-                                  'from',
-                                  self._begin_date.strftime('%Y-%m-%d'),
-                                  'to',
-                                  self._end_date.strftime('%Y-%m-%d') + '.csv'])
+            file_name = constants._FILE_NAME
+            file_name = file_name.format(name=name,
+                                         periodicity=periodicity,
+                                         begin_date=begin_date,
+                                         end_date=end_date)
+            file_path = os.path.join(directory_path,
+                                     file_name)
+            return str.__new__(cls,
+                               file_path)
+        try:
+            directory_path = os.path.dirname(file_path)
+            file_name = os.path.basename(file_path)
+            if not os.path.exists(directory_path):
+                os.makedirs(directory_path)
+            if not file_name.lower().strip().endswith(constants._FILE_EXTENSION):
+                raise TypeError
+        except:
+            message = constants._FILE_PATH_MESSAGE
+            message = message.format(file_path=file_path)
+            raise TypeError(message)
         else:
-            try:
-                directory_path = os.path.dirname(file_path)
-                file_name = os.path.basename(file_path)
-                if not file_name.lower().endswith('.csv'):
-                    raise FilePathError
-            except:
-                raise FilePathError
-        file_path = os.path.join(directory_path,
-                                 file_name)
-        self._file_path = file_path
-
-    @property
-    def file_path(self):
-
-        return self._file_path
+            return str.__new__(cls,
+                               file_path)

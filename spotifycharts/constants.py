@@ -51,7 +51,7 @@ _PROGRESS_BAR_DESCRIPTION = '{current_time} | downloading charts ({region_name})
 
 _CHART_DOWNLOAD_MESSAGE = 'unable to download the chart by this url: {url}'
 _REGION_DOWNLOAD_MESSAGE = 'unable to download the regions by this url: {url}'
-_NAME_MESSAGE = 'argument name must be either "viral50" or "top100": {name}'
+_NAME_MESSAGE = 'argument name must be either "viral50" or "top200": {name}'
 _PERIODICITY_MESSAGE = 'argument periodicity must be either "daily" or "weekly": {periodicity}'
 _REGION_NAME_MESSAGE = 'argument region_name must be string and store an item from the return of get_all_regions(): {region_name}'
 _REGION_NAMES_MESSAGE = 'argument region_names must be list of strings and store items from the return of get_all_regions(): {region_names}'

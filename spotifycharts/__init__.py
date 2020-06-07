@@ -103,7 +103,7 @@ class ChartData:
                                             end_date,
                                             file_path)
         if os.path.exists(self._file_path):
-            self.data = pd.read_csv(self._file_path).copy(deep=True)
+            self._data = pd.read_csv(self._file_path).copy(deep=True)
         else:
             regions = get_all_regions(self._name,
                                       self._periodicity)
@@ -120,11 +120,11 @@ class ChartData:
             chart_date, date_code = list(dates.items())[0]
             chart_url = constants._CHART_URL.format(region_url=region_url,
                                                     date_code=date_code)
-            self.data = self._download_chart(chart_url,
-                                             region_name,
-                                             chart_date)
-            self.data.to_csv(self._file_path,
-                             index=False)
+            self._data = self._download_chart(chart_url,
+                                              region_name,
+                                              chart_date)
+            self._data.to_csv(self._file_path,
+                              index=False)
         self._download_necessary_charts()
 
 
@@ -153,7 +153,7 @@ class ChartData:
                              response,
                              region_name):
 
-        region_charts = self.data[self.data['region_name'] == region_name]
+        region_charts = self._data[self._data['region_name'] == region_name]
         file_dates = [pd.Timestamp(file_date).to_pydatetime().date()
                       for file_date in region_charts['date'].unique()]
         tree = et.parse(io.StringIO(response.text),
@@ -226,22 +226,22 @@ class ChartData:
                                              region_names,
                                              chart_dates)
                     partial_data = list(partial_data)
-                self.data = self.data.append(partial_data,
-                                             sort=True)
-                self.data.reset_index(drop=True,
-                                      inplace=True)
-                self.data.to_csv(self._file_path,
-                                 sep=constants._FILE_DELIMETER,
-                                 index=False)
-            self.data.drop_duplicates(inplace=True)
-            self.data.sort_values(by=['region_name', 'date'],
-                                  ascending=[True, False],
-                                  inplace=True)
-            self.data.reset_index(drop=True,
-                                  inplace=True)
-            self.data.to_csv(self._file_path,
-                             sep=constants._FILE_DELIMETER,
-                             index=False)
+                self._data = self._data.append(partial_data,
+                                               sort=True)
+                self._data.reset_index(drop=True,
+                                       inplace=True)
+                self._data.to_csv(self._file_path,
+                                  sep=constants._FILE_DELIMETER,
+                                  index=False)
+            self._data.drop_duplicates(inplace=True)
+            self._data.sort_values(by=['region_name', 'date'],
+                                   ascending=[True, False],
+                                   inplace=True)
+            self._data.reset_index(drop=True,
+                                   inplace=True)
+            self._data.to_csv(self._file_path,
+                              sep=constants._FILE_DELIMETER,
+                              index=False)
 
 
     @staticmethod

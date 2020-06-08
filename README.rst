@@ -28,7 +28,7 @@ The recommended way to install ``spotifycharts`` module is to simply use pip:
 Usage
 #####
 
-``ChartData`` constructor downloads ``name`` charts of ``region_names`` from ``begin_date`` to ``end_date`` on a ``periodicity`` basis with the use of ``cpu_count`` cores saving them into the ``file_path`` and also grants the access to its corresponding attributes:
+``ChartData`` class downloads ``name`` charts of ``region_names`` from ``begin_date`` to ``end_date`` on a ``periodicity`` basis with the use of ``cpu_count`` cores saving them into the ``file_path`` and also grants the access to its corresponding attributes:
 
 .. code:: python
 

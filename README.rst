@@ -22,7 +22,7 @@ The recommended way to install ``spotifycharts`` module is to simply use pip:
 
 .. code:: sh
 
-    pip3 install spotifycharts
+    pip install spotifycharts
 
 
 Usage

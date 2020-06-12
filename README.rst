@@ -7,14 +7,14 @@ spotifycharts
 Dependencies
 ############
 
+``spotifycharts`` officially supports only Python 3 and require the following list of libraries:
+
 - pendulum
 - pandas
 - pathos
 - httpx
 - lxml
 - tqdm
-
-``spotifycharts`` officially supports only Python 3.
 
 
 Installation

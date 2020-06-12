@@ -4,10 +4,8 @@ spotifycharts
 ``spotifycharts`` provides data scientists and music enthusiasts with the simple yet effective out-of-box solution to the problem of obtaining `spotifycharts.com <https://github.com/niltonvolpato/python-progressbar>`__ data.
 
 
-Installation
+Dependencies
 ############
-
-Dependencies are listed below:
 
 - pendulum
 - pandas
@@ -17,6 +15,10 @@ Dependencies are listed below:
 - tqdm
 
 ``spotifycharts`` officially supports only Python 3.
+
+
+Installation
+############
 
 The recommended way to install ``spotifycharts`` module is to simply use pip:
 

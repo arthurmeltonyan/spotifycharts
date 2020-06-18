@@ -19,13 +19,13 @@ classifiers = ["Programming Language :: Python :: 3 :: Only",
 
 [tool.poetry.dependencies]
 python = "^3.7"
+requests = "^2.23.0"
 pendulum = "^2.1.0"
 pandas = "^1.0.3"
-requests = "^2.23.0"
+pathos = "^0.2.5"
 lxml = "^4.5.0"
 tqdm = "^4.46.0"
-pathos = "^0.2.5"
-httpx = "^0.13.3"
+
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

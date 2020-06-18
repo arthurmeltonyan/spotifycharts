@@ -9,10 +9,10 @@ Installation
 
 Dependencies are listed below:
 
+- requests
 - pendulum
 - pandas
 - pathos
-- httpx
 - lxml
 - tqdm
 

@@ -4,7 +4,7 @@ import os
 
 import pandas as pd
 import pendulum
-import httpx
+import requests
 from lxml import etree as et
 from tqdm import auto
 from pathos import multiprocessing as mp
@@ -25,9 +25,9 @@ def get_all_regions(name,
     periodicity_code = constants._PERIODICITY_VALUES[periodicity]
 
     main_url = constants._MAIN_URL.format(name_code=name_code)
-    response = httpx.get(main_url,
-                         timeout=constants._TIMEOUT)
-    if not 200 <= response.status_code < 300:
+    with requests.Session() as session:
+        response = session.get(main_url)
+    if response.status_code != 200:
         return {}
     tree = et.parse(io.StringIO(response.text),
                     et.HTMLParser())
@@ -54,9 +54,9 @@ def get_all_dates(name,
     regions = get_all_regions(name,
                               periodicity)
     region_url = regions[region_name]
-    response = httpx.get(region_url,
-                         timeout=constants._TIMEOUT)
-    if not 200 <= response.status_code < 300:
+    with requests.Session() as session:
+        response = session.get(region_url)
+    if response.status_code != 200:
         return {}
     tree = et.parse(io.StringIO(response.text),
                     et.HTMLParser())
@@ -78,7 +78,7 @@ def get_all_dates(name,
     return dates
 
 
-class ChartData:
+class Downloader:
 
 
     def __init__(self,
@@ -120,9 +120,9 @@ class ChartData:
             chart_date, date_code = list(dates.items())[0]
             chart_url = constants._CHART_URL.format(region_url=region_url,
                                                     date_code=date_code)
-            self._data = self._download_chart(chart_url,
-                                              region_name,
-                                              chart_date)
+            self._data = Downloader._download_chart(chart_url,
+                                                    region_name,
+                                                    chart_date)
             self._data.to_csv(self._file_path,
                               index=False)
         self._download_necessary_charts()
@@ -179,79 +179,14 @@ class ChartData:
         return dates
 
 
-    def _download_necessary_charts(self):
-
-        name_code = constants._NAME_VALUES[self._name]
-
-        main_url = constants._MAIN_URL.format(name_code=name_code)
-        response = httpx.get(main_url,
-                             timeout=constants._TIMEOUT)
-        if not 200 <= response.status_code < 300:
-            return
-        regions = self._get_necessary_regions(response)
-        if not regions:
-            return
-        with auto.tqdm(regions.items()) as progress_bar:
-            for region_name, region_url in progress_bar:
-                current_time = pendulum.now().time()
-                current_time = current_time.format(constants._PROGRESS_BAR_TIME_FORMAT)
-                description = constants._PROGRESS_BAR_DESCRIPTION
-                description = description.format(current_time=current_time,
-                                                 region_name=region_name)
-                progress_bar.set_description(description)
-                response = httpx.get(region_url)
-                if not 200 <= response.status_code < 300:
-                    continue
-                region_dates = self._get_necessary_dates(response,
-                                                         region_name)
-                if not region_dates:
-                    continue
-                tree = et.parse(io.StringIO(response.text),
-                                et.HTMLParser())
-                error = tree.xpath(constants._ERROR_XPATH)
-                unfound = tree.xpath(constants._UNFOUND_XPATH)
-                if error or unfound:
-                    continue
-                chart_urls = []
-                chart_dates = []
-                for chart_date, date_code in region_dates.items():
-                    chart_url = constants._CHART_URL.format(region_url=region_url,
-                                                            date_code=date_code)
-                    chart_urls.append(chart_url)
-                    chart_dates.append(chart_date)
-                region_names = [region_name] * len(chart_urls)
-                with mp.ProcessingPool(self._cpu_count) as pool:
-                    partial_data = pool.imap(ChartData._download_chart,
-                                             chart_urls,
-                                             region_names,
-                                             chart_dates)
-                    partial_data = list(partial_data)
-                self._data = self._data.append(partial_data,
-                                               sort=True)
-                self._data.reset_index(drop=True,
-                                       inplace=True)
-                self._data.to_csv(self._file_path,
-                                  sep=constants._FILE_DELIMETER,
-                                  index=False)
-            self._data.drop_duplicates(inplace=True)
-            self._data.sort_values(by=['region_name', 'date'],
-                                   ascending=[True, False],
-                                   inplace=True)
-            self._data.reset_index(drop=True,
-                                   inplace=True)
-            self._data.to_csv(self._file_path,
-                              sep=constants._FILE_DELIMETER,
-                              index=False)
-
-
     @staticmethod
     def _download_chart(chart_url,
                         region_name,
                         chart_date):
 
-        response = httpx.get(chart_url,
-                             timeout=constants._TIMEOUT)
-        if not 200 <= response.status_code < 300:
+        with requests.Session() as session:
+            response = session.get(chart_url)
+        if response.status_code != 200:
             message = constants._CHART_DOWNLOAD_MESSAGE
             message = message.format(url=chart_url)
             auto.tqdm.write(message)
@@ -265,15 +200,15 @@ class ChartData:
             message = message.format(url=chart_url)
             auto.tqdm.write(message)
             return pd.DataFrame()
-        viral50_header = response.text.splitlines()[0]
-        top200_header = response.text.splitlines()[1]
-        if viral50_header == constants._VIRAL50_CHART_FILE_HEADER:
+        viral50_chart_file_header = response.text.splitlines()[0]
+        top200_chart_file_header = response.text.splitlines()[1]
+        if viral50_chart_file_header == constants._VIRAL50_CHART_FILE_HEADER:
             chart = pd.read_csv(io.StringIO(response.text),
                                 sep=constants._FILE_DELIMETER,
                                 skiprows=None,
                                 header=0,
                                 names=constants._VIRAL50_CHART_COLUMN_NAMES)
-        elif top200_header == constants._TOP200_CHART_FILE_HEADER:
+        elif top200_chart_file_header == constants._TOP200_CHART_FILE_HEADER:
             chart = pd.read_csv(io.StringIO(response.text),
                                 sep=constants._FILE_DELIMETER,
                                 skiprows=0,
@@ -294,6 +229,72 @@ class ChartData:
                           ascending=True,
                           inplace=True)
         return chart
+
+
+    def _download_necessary_charts(self):
+
+        name_code = constants._NAME_VALUES[self._name]
+
+        main_url = constants._MAIN_URL.format(name_code=name_code)
+        with requests.Session() as session:
+            response = session.get(main_url)
+        if response.status_code != 200:
+            return
+        regions = self._get_necessary_regions(response)
+        if not regions:
+            return
+        with auto.tqdm(regions.items()) as progress_bar:
+            for region_name, region_url in progress_bar:
+                current_time = pendulum.now().time()
+                current_time = current_time.format(constants._PROGRESS_BAR_TIME_FORMAT)
+                description = constants._PROGRESS_BAR_DESCRIPTION
+                description = description.format(current_time=current_time,
+                                                 region_name=region_name)
+                progress_bar.set_description(description)
+                with requests.Session() as session:
+                    response = session.get(region_url)
+                if response.status_code != 200:
+                    continue
+                region_dates = self._get_necessary_dates(response,
+                                                         region_name)
+                if not region_dates:
+                    continue
+                tree = et.parse(io.StringIO(response.text),
+                                et.HTMLParser())
+                error = tree.xpath(constants._ERROR_XPATH)
+                unfound = tree.xpath(constants._UNFOUND_XPATH)
+                if error or unfound:
+                    continue
+                chart_urls = []
+                chart_dates = []
+                for chart_date, date_code in region_dates.items():
+                    chart_url = constants._CHART_URL.format(region_url=region_url,
+                                                            date_code=date_code)
+                    chart_urls.append(chart_url)
+                    chart_dates.append(chart_date)
+                region_names = [region_name] * len(chart_urls)
+                with mp.ProcessingPool(self._cpu_count) as pool:
+                    partial_data = pool.imap(Downloader._download_chart,
+                                             chart_urls,
+                                             region_names,
+                                             chart_dates)
+                    partial_data = list(partial_data)
+                self._data = self._data.append(partial_data,
+                                               sort=True)
+                self._data.reset_index(drop=True,
+                                       inplace=True)
+                self._data.to_csv(self._file_path,
+                                  sep=constants._FILE_DELIMETER,
+                                  index=False)
+            self._data.drop_duplicates(inplace=True)
+            self._data.sort_values(by=['region_name', 'date'],
+                                   ascending=[True, False],
+                                   inplace=True)
+            self._data.reset_index(drop=True,
+                                   inplace=True)
+            self._data.to_csv(self._file_path,
+                              sep=constants._FILE_DELIMETER,
+                              index=False)
 
 
     @property

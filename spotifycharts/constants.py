@@ -3,9 +3,6 @@ _REGION_URL = 'https://spotifycharts.com/{name_code}/{region_code}/{periodicity_
 _CHART_URL = '{region_url}/{date_code}/download'
 
 
-_TIMEOUT = 15.0
-
-
 _NAME_VALUES = {'viral50': 'viral',
                 'top200': 'regional'}
 _PERIODICITY_VALUES = {'daily': 'daily',
@@ -46,7 +43,7 @@ _TOP200_CHART_COLUMN_NAMES = ['track_position',
 
 
 _PROGRESS_BAR_TIME_FORMAT = 'HH:mm'
-_PROGRESS_BAR_DESCRIPTION = '{current_time} | downloading charts ({region_name})'
+_PROGRESS_BAR_DESCRIPTION = '{current_time} | {region_name}'
 
 
 _CHART_DOWNLOAD_MESSAGE = 'unable to download the chart by this url: {url}'

@@ -4,7 +4,7 @@ import os
 
 import pendulum
 from pendulum.date import Date
-import httpx
+import requests
 from lxml import etree as et
 from pathos import multiprocessing as mp
 
@@ -60,9 +60,9 @@ class _RegionName(str):
         name_code = constants._NAME_VALUES[name]
 
         main_url = constants._MAIN_URL.format(name_code=name_code)
-        response = httpx.get(main_url,
-                             timeout=constants._TIMEOUT)
-        if not 200 <= response.status_code < 300:
+        with requests.Session() as session:
+            response = session.get(main_url)
+        if response.status_code != 200:
             message = constants._REGION_DOWNLOAD_MESSAGE
             message = message.format(url=main_url)
             raise ConnectionError(message)
@@ -98,9 +98,9 @@ class _RegionNames(str):
         name_code = constants._NAME_VALUES[name]
 
         main_url = constants._MAIN_URL.format(name_code=name_code)
-        response = httpx.get(main_url,
-                             timeout=constants._TIMEOUT)
-        if not 200 <= response.status_code < 300:
+        with requests.Session() as session:
+            response = session.get(main_url)
+        if response.status_code != 200:
             message = constants._REGION_DOWNLOAD_MESSAGE
             message = message.format(url=main_url)
             raise ConnectionError(message)
@@ -264,7 +264,7 @@ class _FilePath(str):
         try:
             directory_path = os.path.dirname(file_path)
             file_name = os.path.basename(file_path)
-            if not os.path.exists(directory_path):
+            if file_path != file_name and not os.path.exists(directory_path):
                 os.makedirs(directory_path)
             if not file_name.lower().strip().endswith(constants._FILE_EXTENSION):
                 raise TypeError

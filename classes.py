@@ -19,7 +19,8 @@ class Name(str):
     def __new__(cls,
                 name):
         if name in settings.NAME_CODES:
-            return str.__new__(cls, name)
+            return str.__new__(cls,
+                               name)
         else:
             raise exceptions.ArgumentTypeError(settings.NAME_ERROR)
 
@@ -29,7 +30,8 @@ class Periodicity(str):
     def __new__(cls,
                 periodicity):
         if periodicity in settings.PERIODICITY_CODES:
-            return str.__new__(cls, periodicity)
+            return str.__new__(cls,
+                               periodicity)
         else:
             raise exceptions.ArgumentTypeError(settings.PERIODICITY_ERROR)
 
@@ -43,7 +45,8 @@ class RegionNames(str):
         if not region_names:
             region_names = [settings.DEFAULT_REGION_NAME]
         if set(region_names).issubset(regions.keys()):
-            return [str.__new__(cls, region_name)
+            return [str.__new__(cls,
+                                region_name)
                     for region_name in region_names]
         else:
             raise exceptions.ArgumentTypeError(settings.REGION_NAME_ERROR)
@@ -98,7 +101,8 @@ class CpuCount(int):
         if not cpu_count:
             cpu_count = mp.cpu_count()
         if cpu_count in list(range(1, mp.cpu_count() + 1)):
-            return int.__new__(cls, cpu_count)
+            return int.__new__(cls,
+                               cpu_count)
         else:
             raise exceptions.ArgumentTypeError(settings.CPU_COUNT_ERROR)
 
@@ -115,7 +119,8 @@ class DirectoryPath(str):
         except (TypeError, AttributeError):
             raise exceptions.ArgumentTypeError(settings.DIRECTORY_PATH_ERROR)
         else:
-            return str.__new__(cls, directory_path)
+            return str.__new__(cls,
+                               directory_path)
 
 
 class Chart(pd.DataFrame):

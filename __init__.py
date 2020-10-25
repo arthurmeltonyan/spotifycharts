@@ -148,8 +148,10 @@ class Downloader:
         regions_items = auto.tqdm(regions.items())
         for region_name, region_code in regions_items:
             region_charts = self[region_name]
-            file_dates = [pendulum.instance(pd.Timestamp(file_date).to_pydatetime()).date()
-                          for file_date in region_charts['date'].unique()]
+            file_dates = []
+            for file_date in region_charts['date'].unique():
+                file_date = pendulum.instance(pd.Timestamp(file_date).to_pydatetime()).date()
+                file_dates.append(file_date)
             current_time = pendulum.now().format('HH:mm')
             description = f'{current_time} | {region_name}'
             regions_items.set_description(description)
@@ -157,14 +159,14 @@ class Downloader:
                                        self.periodicity,
                                        region_name)
             urls = []
-            dates = {}
+            dates = []
             for date, date_code in all_dates.items():
                 if self.begin_date <= date <= self.end_date and date not in file_dates:
-                    dates[date] = date_code
                     url = f'{settings.SPOTIFY_CHARTS_URL}/{self.name_code}/{region_code}/{self.periodicity_code}/{date_code}'
                     urls.append(url)
+                    dates.append(date)
             downloaded_charts = []
-            for url, date in auto.tqdm(zip(urls, dates.keys()),
+            for url, date in auto.tqdm(zip(urls, dates),
                                        total=len(urls)):
                 chart = classes.Chart(url)
                 chart['region_name'] = region_name

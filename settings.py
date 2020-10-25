@@ -1,53 +1,53 @@
-import os
 import typing_extensions as te
 
-import dotenv
-dotenv.load_dotenv('spotifycharts/configuration.env')
+import environs
+configuration = environs.Env()
+configuration.read_env('spotifycharts/configuration.env')
 
-SPOTIFY_CHARTS_URL: te.Final = os.environ['URL']
-
-
-NAME_CODES: te.Final = {os.environ['VIRAL50'].split(':')[0]: os.environ['VIRAL50'].split(':')[1],
-                        os.environ['TOP200'].split(':')[0]: os.environ['TOP200'].split(':')[1]}
-PERIODICITY_CODES: te.Final = {os.environ['DAILY'].split(':')[0]: os.environ['DAILY'].split(':')[1],
-                               os.environ['WEEKLY'].split(':')[0]: os.environ['WEEKLY'].split(':')[1]}
+SPOTIFY_CHARTS_URL: te.Final = configuration.str('URL')
 
 
-DEFAULT_REGION_NAME: te.Final = os.environ['DEFAULT_REGION_NAME']
-DEFAULT_MONTH_PERIOD: te.Final = os.environ['DEFAULT_MONTH_PERIOD']
-FOUNDATION_DATE: te.Final = os.environ['FOUNDATION_DATE']
+NAME_CODES: te.Final = {configuration.list('VIRAL50')[0]: configuration.list('VIRAL50')[1],
+                        configuration.list('TOP200')[0]: configuration.list('TOP200')[1]}
+PERIODICITY_CODES: te.Final = {configuration.list('DAILY')[0]: configuration.list('DAILY')[1],
+                               configuration.list('WEEKLY')[0]: configuration.list('WEEKLY').split(':')[1]}
 
 
-CHART_ERROR_CSS: te.Final = os.environ['CHART_ERROR_CSS']
-LOST_CHART_CSS: te.Final = os.environ['LOST_CHART_CSS']
-DATE_CSS: te.Final = os.environ['DATE_CSS']
-REGION_CSS: te.Final = os.environ['REGION_CSS']
-DATE_CODE_ATTRIBUTE: te.Final = os.environ['DATE_CODE_ATTRIBUTE']
-REGION_CODE_ATTRIBUTE: te.Final = os.environ['REGION_CODE_ATTRIBUTE']
-HTML_DATE_FORMAT: te.Final = os.environ['HTML_DATE_FORMAT']
-URL_DATE_FORMAT: te.Final = os.environ['URL_DATE_FORMAT']
-URL_DATE_DELIMITER: te.Final = os.environ['URL_DATE_DELIMITER']
+DEFAULT_MONTH_PERIOD: te.Final = configuration.int('DEFAULT_MONTH_PERIOD')
+DEFAULT_REGION_NAME: te.Final = configuration.str('DEFAULT_REGION_NAME')
+FOUNDATION_DATE: te.Final = configuration.str('FOUNDATION_DATE')
 
 
-VIRAL50_CHART_FILE_HEADER: te.Final = os.environ['VIRAL50_CHART_FILE_HEADER']
-TOP200_CHART_FILE_HEADER: te.Final = os.environ['TOP200_CHART_FILE_HEADER']
-FILE_DELIMITER: te.Final = os.environ['FILE_DELIMITER']
-FILE_ENCODING: te.Final = os.environ['FILE_ENCODING']
-FILE_EXTENSION: te.Final = os.environ['FILE_EXTENSION']
-FILE_DATE_FORMAT: te.Final = os.environ['INITIAL_FILE_DATE_FORMAT']
-VIRAL50_CHART_COLUMN_NAMES: te.Final = os.environ['VIRAL50_CHART_COLUMN_NAMES'].split(',')
-TOP200_CHART_COLUMN_NAMES: te.Final = os.environ['TOP200_CHART_COLUMN_NAMES'].split(',')
+CHART_ERROR_CSS: te.Final = configuration.str('CHART_ERROR_CSS')
+LOST_CHART_CSS: te.Final = configuration.str('LOST_CHART_CSS')
+DATE_CSS: te.Final = configuration.str('DATE_CSS')
+REGION_CSS: te.Final = configuration.str('REGION_CSS')
+DATE_CODE_ATTRIBUTE: te.Final = configuration.str('DATE_CODE_ATTRIBUTE')
+REGION_CODE_ATTRIBUTE: te.Final = configuration.str('REGION_CODE_ATTRIBUTE')
+HTML_DATE_FORMAT: te.Final = configuration.str('HTML_DATE_FORMAT')
+URL_DATE_FORMAT: te.Final = configuration.str('URL_DATE_FORMAT')
+URL_DATE_DELIMITER: te.Final = configuration.str('URL_DATE_DELIMITER')
 
 
-REGION_DOWNLOAD_ERROR: te.Final = os.environ['REGION_DOWNLOAD_ERROR']
-DATE_DOWNLOAD_ERROR: te.Final = os.environ['DATE_DOWNLOAD_ERROR']
-CHART_DOWNLOAD_ERROR: te.Final = os.environ['CHART_DOWNLOAD_ERROR']
-CHART_DOWNLOAD_WARNING: te.Final = os.environ['CHART_DOWNLOAD_WARNING']
-NAME_ERROR: te.Final = os.environ['NAME_ERROR']
-PERIODICITY_ERROR: te.Final = os.environ['PERIODICITY_ERROR']
-REGION_NAME_ERROR: te.Final = os.environ['REGION_NAME_ERROR']
-BEGIN_DATE_ERROR: te.Final = os.environ['BEGIN_DATE_ERROR']
-END_DATE_ERROR: te.Final = os.environ['END_DATE_ERROR']
-DATE_RANGE_ERROR: te.Final = os.environ['DATE_RANGE_ERROR']
-CPU_COUNT_ERROR: te.Final = os.environ['CPU_COUNT_ERROR']
-DIRECTORY_PATH_ERROR: te.Final = os.environ['DIRECTORY_PATH_ERROR']
+VIRAL50_CHART_FILE_HEADER: te.Final = configuration.str('VIRAL50_CHART_FILE_HEADER')
+TOP200_CHART_FILE_HEADER: te.Final = configuration.str('TOP200_CHART_FILE_HEADER')
+FILE_DELIMITER: te.Final = configuration.str('FILE_DELIMITER')
+FILE_ENCODING: te.Final = configuration.str('FILE_ENCODING')
+FILE_EXTENSION: te.Final = configuration.str('FILE_EXTENSION')
+FILE_DATE_FORMAT: te.Final = configuration.str('INITIAL_FILE_DATE_FORMAT')
+VIRAL50_CHART_COLUMN_NAMES: te.Final = configuration.list('VIRAL50_CHART_COLUMN_NAMES')
+TOP200_CHART_COLUMN_NAMES: te.Final = configuration.list('TOP200_CHART_COLUMN_NAMES')
+
+
+REGION_DOWNLOAD_ERROR: te.Final = configuration.str('REGION_DOWNLOAD_ERROR')
+DATE_DOWNLOAD_ERROR: te.Final = configuration.str('DATE_DOWNLOAD_ERROR')
+CHART_DOWNLOAD_ERROR: te.Final = configuration.str('CHART_DOWNLOAD_ERROR')
+CHART_DOWNLOAD_WARNING: te.Final = configuration.str('CHART_DOWNLOAD_WARNING')
+NAME_ERROR: te.Final = configuration.str('NAME_ERROR')
+PERIODICITY_ERROR: te.Final = configuration.str('PERIODICITY_ERROR')
+REGION_NAME_ERROR: te.Final = configuration.str('REGION_NAME_ERROR')
+BEGIN_DATE_ERROR: te.Final = configuration.str('BEGIN_DATE_ERROR')
+END_DATE_ERROR: te.Final = configuration.str('END_DATE_ERROR')
+DATE_RANGE_ERROR: te.Final = configuration.str('DATE_RANGE_ERROR')
+CPU_COUNT_ERROR: te.Final = configuration.str('CPU_COUNT_ERROR')
+DIRECTORY_PATH_ERROR: te.Final = configuration.str('DIRECTORY_PATH_ERROR')

@@ -14,7 +14,8 @@ from spotifycharts import settings
 from spotifycharts import exceptions
 
 
-mp.set_start_method('fork')
+mp.set_start_method('fork',
+                    force=True)
 
 
 def download_regions(name):

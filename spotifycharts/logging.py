@@ -3,7 +3,7 @@ from loguru import logger
 from spotifycharts import settings
 
 logger.remove()
-logger.add(f'all_{settings.LOG_FILE_NAME}',
+logger.add(f'logs/every_level_{settings.LOG_FILE_NAME}',
            level=settings.LOG_LEVEL,
            format=settings.LOG_FORMAT,
            filter=None,
@@ -20,7 +20,7 @@ logger.add(f'all_{settings.LOG_FILE_NAME}',
            mode='a',
            buffering=settings.LOG_BUFFERING,
            encoding=settings.LOG_ENCODING)
-logger.add(f'info_{settings.LOG_FILE_NAME}',
+logger.add(f'logs/info_level_{settings.LOG_FILE_NAME}',
            level=settings.LOG_LEVEL,
            format=settings.LOG_FORMAT,
            filter=lambda record: record['level'].name == 'INFO',
@@ -37,7 +37,7 @@ logger.add(f'info_{settings.LOG_FILE_NAME}',
            mode='a',
            buffering=settings.LOG_BUFFERING,
            encoding=settings.LOG_ENCODING)
-logger.add(f'warning_{settings.LOG_FILE_NAME}',
+logger.add(f'logs/warning_level_{settings.LOG_FILE_NAME}',
            level=settings.LOG_LEVEL,
            format=settings.LOG_FORMAT,
            filter=lambda record: record['level'].name == 'WARNING',

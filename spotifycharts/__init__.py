@@ -8,10 +8,10 @@ import pendulum
 import pandas as pd
 from tqdm import auto
 
-from spotifycharts import logging
 from spotifycharts import classes
 from spotifycharts import settings
 from spotifycharts import exceptions
+from spotifycharts.logging import logger
 
 
 mp.set_start_method('fork',
@@ -26,7 +26,7 @@ def download_regions(name):
         response = session.get(url)
     regions = {}
     if response.status_code != requests.codes.OK:
-        logging.logger.warning(f'{settings.LOG_REGIONS_DOWNLOAD_WARNING} of {name} charts')
+        logger.warning(f'{settings.LOG_REGIONS_DOWNLOAD_WARNING} of {name} charts')
         return regions
     parser = bs4.BeautifulSoup(response.text,
                                'html.parser')
@@ -35,7 +35,7 @@ def download_regions(name):
         region_name = element.text.lower().strip()
         region_code = element.get(settings.REGION_CODE_ATTRIBUTE)
         regions[region_name] = region_code
-    logging.logger.info(f'{settings.LOG_REGIONS_DOWNLOAD_INFO} of {name} charts')
+    logger.info(f'{settings.LOG_REGIONS_DOWNLOAD_INFO} of {name} charts')
     return regions
 
 
@@ -54,14 +54,14 @@ def download_dates(name,
         response = session.get(region_url)
     dates = {}
     if response.status_code != requests.codes.OK:
-        logging.logger.warning(f'{settings.LOG_DATES_DOWNLOAD_WARNING} of {region_name} {name} charts')
+        logger.warning(f'{settings.LOG_DATES_DOWNLOAD_WARNING} of {region_name} {name} charts')
         return dates
     parser = bs4.BeautifulSoup(response.text,
                                'html.parser')
     chart_error = parser.select(settings.CHART_ERROR_CSS)
     chart_lost = parser.select(settings.LOST_CHART_CSS)
     if chart_error or chart_lost:
-        logging.logger.warning(f'{settings.LOG_DATES_DOWNLOAD_WARNING} of {region_name} {name} charts')
+        logger.warning(f'{settings.LOG_DATES_DOWNLOAD_WARNING} of {region_name} {name} charts')
         return dates
     date_elements = parser.select(settings.DATE_CSS)
     for date_element in date_elements:
@@ -76,7 +76,7 @@ def download_dates(name,
             date_code = date_code.format(settings.FILE_DATE_FORMAT)
             date_codes.append(date_code)
         dates[date] = settings.URL_DATE_DELIMITER.join(date_codes)
-    logging.logger.info(f'{settings.LOG_DATES_DOWNLOAD_INFO} of {region_name} {name} charts')
+    logger.info(f'{settings.LOG_DATES_DOWNLOAD_INFO} of {region_name} {name} charts')
     return dates
 
 
@@ -119,7 +119,10 @@ class Downloader:
         column_names.extend(['region_name', 'date'])
         for region_name, region_code in regions_items:
             file_name = f'from_{begin_date}_to_{end_date}.{settings.FILE_EXTENSION}'
-            directory_path = pathlib.Path(f'spotify_charts/{self.name}/{self.periodicity}/{region_name}')
+            directory_path = pathlib.Path(self.directory_path).joinpath('spotify_charts',
+                                                                        self.name,
+                                                                        self.periodicity,
+                                                                        region_name)
             directory_path.mkdir(parents=True,
                                  exist_ok=True)
             file_path = directory_path.joinpath(file_name)
@@ -146,14 +149,19 @@ class Downloader:
                     url = f'{settings.SPOTIFY_CHARTS_URL}/{name_code}/{region_code}/{periodicity_code}/{date_code}'
                     urls.append(url)
                     dates.append(date)
-            logging.logger.info(f'{region_name}:{len(urls)}')
+            logger.info(f'{region_name}:{len(urls)}')
             with mp.Pool(self.cpu_count) as pool:
                 downloaded_charts = pool.map(classes.Chart,
                                              urls)
+            self.erroneous_urls = []
             for chart, date in zip(downloaded_charts, dates):
                 if not chart.empty:
                     chart['region_name'] = region_name
                     chart['date'] = date
+                else:
+                    date_code = all_dates[date]
+                    url = f'{settings.SPOTIFY_CHARTS_URL}/{name_code}/{region_code}/{periodicity_code}/{date_code}'
+                    self.erroneous_urls.append(url)
             if downloaded_charts:
                 data = region_charts.append(downloaded_charts,
                                             sort=True)
@@ -182,10 +190,12 @@ class Downloader:
         begin_date = self.begin_date.format(settings.FILE_DATE_FORMAT)
         end_date = self.end_date.format(settings.FILE_DATE_FORMAT)
         file_name = f'from_{begin_date}_to_{end_date}.{settings.FILE_EXTENSION}'
-        directory_path = pathlib.Path(f'spotify_charts/{self.name}/{self.periodicity}/{region_name}')
+        directory_path = pathlib.Path(self.directory_path).joinpath('spotify_charts',
+                                                                    self.name,
+                                                                    self.periodicity,
+                                                                    region_name)
         file_path = directory_path.joinpath(file_name)
         charts = pd.read_csv(file_path,
                              sep=settings.FILE_DELIMITER,
                              encoding=settings.FILE_ENCODING)
-        charts = charts[(begin_date <= charts['date']) & (charts['date'] <= end_date)]
         return charts

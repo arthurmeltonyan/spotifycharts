@@ -9,9 +9,9 @@ import pendulum
 from pendulum.date import Date
 
 import spotifycharts as sc
-from spotifycharts import logging
 from spotifycharts import settings
 from spotifycharts import exceptions
+from spotifycharts.logging import logger
 
 
 class Name(str):
@@ -147,14 +147,14 @@ class Chart(pd.DataFrame):
         with requests.Session() as session:
             response = session.get(url + '/download')
         if response.status_code != requests.codes.OK:
-            logging.logger.warning(f'{settings.LOG_CHART_DOWNLOAD_WARNING}: {url}')
+            logger.warning(f'{settings.LOG_CHART_DOWNLOAD_WARNING}: {url}')
             super().__init__(columns=['date'])
         parser = bs4.BeautifulSoup(response.text,
                                    'html.parser')
         chart_error = parser.select(settings.CHART_ERROR_CSS)
         chart_lost = parser.select(settings.LOST_CHART_CSS)
         if chart_error or chart_lost:
-            logging.logger.warning(f'{settings.LOG_CHART_DOWNLOAD_WARNING}: {url}')
+            logger.warning(f'{settings.LOG_CHART_DOWNLOAD_WARNING}: {url}')
             super().__init__(columns=['date'])
         viral50_chart_file_header = response.text.splitlines()[0]
         top200_chart_file_header = response.text.splitlines()[1]
@@ -169,7 +169,7 @@ class Chart(pd.DataFrame):
             chart.track_name = chart.track_name.str.strip()
             chart.artist_name = chart.artist_name.str.strip()
             chart.track_url = chart.track_url.str.strip()
-            logging.logger.info(f'{settings.LOG_CHART_DOWNLOAD_INFO}: {url}')
+            logger.info(f'{settings.LOG_CHART_DOWNLOAD_INFO}: {url}')
             super().__init__(chart)
         elif top200_chart_file_header == settings.TOP200_CHART_FILE_HEADER:
             chart = pd.read_csv(io.StringIO(response.text),
@@ -183,8 +183,8 @@ class Chart(pd.DataFrame):
             chart.artist_name = chart.artist_name.str.strip()
             chart.stream_count = pd.to_numeric(chart.stream_count)
             chart.track_url = chart.track_url.str.strip()
-            logging.logger.info(f'{settings.LOG_CHART_DOWNLOAD_INFO}: {url}')
+            logger.info(f'{settings.LOG_CHART_DOWNLOAD_INFO}: {url}')
             super().__init__(chart)
         else:
-            logging.logger.warning(f'{settings.LOG_CHART_DOWNLOAD_WARNING}: {url}')
+            logger.warning(f'{settings.LOG_CHART_DOWNLOAD_WARNING}: {url}')
             super().__init__(columns=['date'])
